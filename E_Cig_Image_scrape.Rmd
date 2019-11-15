@@ -1,0 +1,66 @@
+---
+title: "E-Cigs Webscrape"
+author: "Bryan Adams"
+date: "November 7, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(rvest)
+library(RSelenium)
+library(jsonlite)
+library(purrr)
+```
+
+# Webscrape an image from google image search
+
+This is a working script that will save the first one hundred images.  I still need to work out saving the file name (that is predicting the weird names images will be since files do not like to have different symbols in them)
+
+## Setting up the driver
+
+```{r}
+driver = rsDriver(browser = 'firefox')
+remote_driver = driver$client
+```
+
+## Inputting the search term
+
+```{r}
+search_term = "e-cig"
+```
+
+## Navigating to the first image page
+
+```{r}
+url = paste0("https://www.google.com/search?q=", search_term,"&source=lnms&tbm=isch")
+remote_driver$navigate(url)
+```
+
+## This gets the first 100 images.  I will adjust it to grab more images.
+
+```{r}
+images = remote_driver$findElements(using = "class name", value = "rg_meta")
+```
+
+```{r}
+
+
+image_downloader = function(image){
+
+  json_info = fromJSON(image$getElementAttribute('innerHTML')[[1]])
+  
+  image_url = json_info$ou
+  
+  name = json_info$pt
+  
+  download.file(image_url, paste0(name,".jpg"), mode = "wb")
+
+}
+
+images%>%
+  map(image_downloader)
+
+
+```
